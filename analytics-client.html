@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockMind AI — Analyses Clients</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --navy:#0A1628;--navy2:#0F1F3D;--blue:#1E6FFF;--cyan:#00E5CC;--green:#00D68F;
+  --grad:linear-gradient(135deg,#00E5CC,#1E6FFF);--txt:#E8F0FF;--txts:#7B9AC4;
+  --brd:rgba(30,111,255,0.15);--card:rgba(15,31,61,0.8);--font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--navy);color:var(--txt);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(30,111,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(30,111,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+
+/* HEADER */
+.header{background:rgba(10,22,40,0.95);border-bottom:1px solid var(--brd);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;}
+.logo-row{display:flex;align-items:center;gap:12px;}
+.logo-ic{width:36px;height:36px;background:var(--grad);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.logo-ic svg{width:20px;height:20px;}
+.logo-name{font-size:16px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-sub{font-size:9px;color:var(--txts);font-family:var(--mono);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.badge{font-size:9px;padding:4px 10px;border-radius:20px;font-family:var(--mono);}
+.b-ro{background:rgba(123,154,196,0.1);color:var(--txts);border:.5px solid rgba(123,154,196,0.2);}
+.b-ai{background:rgba(30,111,255,0.12);color:#3B8FFF;border:.5px solid rgba(30,111,255,0.3);}
+.btn-avis{padding:8px 16px;background:var(--grad);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);text-decoration:none;display:inline-block;}
+
+/* CONTENT */
+.cnt{padding:24px 32px;max-width:1200px;margin:0 auto;}
+.page-title{font-size:24px;font-weight:700;color:var(--txt);margin-bottom:4px;}
+.page-sub{font-size:12px;color:var(--txts);font-family:var(--mono);margin-bottom:20px;}
+
+/* READONLY NOTICE */
+.ro-notice{background:rgba(123,154,196,0.06);border:1px solid rgba(123,154,196,0.15);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--txts);display:flex;align-items:center;gap:8px;}
+
+/* AI BOX */
+.ai-box{background:linear-gradient(135deg,rgba(0,229,204,0.04),rgba(30,111,255,0.04));border:1px solid rgba(0,229,204,0.15);border-radius:10px;padding:12px 16px;margin-bottom:18px;}
+.ai-label{font-size:9px;font-family:var(--mono);color:var(--cyan);margin-bottom:4px;letter-spacing:1.5px;}
+.ai-text{font-size:12px;color:var(--txt);line-height:1.6;}
+
+/* KPI */
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.kc{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);}
+.kl{font-size:9px;color:var(--txts);letter-spacing:1.5px;margin-bottom:6px;font-family:var(--mono);}
+.kv{font-size:24px;font-weight:800;color:var(--txt);line-height:1;}
+.ks{font-size:10px;margin-top:5px;color:var(--green);}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:16px;backdrop-filter:blur(10px);margin-bottom:16px;}
+.card-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.card-tag{font-size:9px;font-family:var(--mono);color:var(--txts);padding:3px 8px;background:rgba(30,111,255,0.1);border-radius:4px;border:.5px solid var(--brd);}
+
+/* GRID */
+.r2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:16px;}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+
+/* REVIEWS */
+.rv{background:rgba(30,111,255,0.04);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:8px;}
+.rv-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.rv-stars{color:#FFD700;font-size:12px;letter-spacing:1px;}
+.rv-txt{font-size:12px;color:var(--txt);line-height:1.6;font-style:italic;}
+.rv-meta{font-size:10px;color:var(--txts);margin-top:5px;font-family:var(--mono);}
+.pill{font-size:9px;padding:3px 9px;border-radius:10px;font-weight:600;}
+.p-pos{background:rgba(0,214,143,0.12);color:var(--green);}
+.p-neu{background:rgba(123,154,196,0.12);color:var(--txts);}
+.p-neg{background:rgba(255,107,107,0.12);color:#FF6B6B;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{padding:6px 14px;border:1px solid var(--brd);border-radius:8px;background:transparent;color:var(--txts);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.filter-btn:hover{border-color:rgba(0,229,204,0.3);color:var(--txt);}
+.filter-btn.on{background:rgba(0,229,204,0.08);border-color:var(--cyan);color:var(--cyan);}
+
+/* STAT ROW */
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.stat-name{font-size:12px;color:var(--txts);flex:1;}
+.stat-bar{flex:1;height:4px;background:rgba(30,111,255,0.1);border-radius:2px;overflow:hidden;}
+.stat-n{font-size:11px;font-family:var(--mono);color:var(--txt);}
+
+/* PROD SCORES */
+.prod-score{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(30,111,255,0.08);}
+.prod-score:last-child{border-bottom:none;}
+.prod-score-name{font-size:12px;color:var(--txt);flex:1;}
+.prod-score-stars{color:#FFD700;font-size:11px;letter-spacing:1px;width:70px;flex-shrink:0;}
+.prod-score-n{font-size:11px;font-family:var(--mono);color:var(--txts);width:30px;text-align:right;flex-shrink:0;}
+
+@media(max-width:900px){.krow{grid-template-columns:repeat(2,1fr);}.r2,.r3{grid-template-columns:1fr;}.cnt{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="header">
+ <div class="logo-row">
+  <div class="logo-ic">
+   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+   </svg>
+  </div>
+  <div>
+   <div class="logo-name">StockMind AI</div>
+   <div class="logo-sub">SMART STOCK · INTELLIGENT DECISIONS</div>
+  </div>
+ </div>
+ <div class="header-right">
+  <span class="badge b-ro">👁 LECTURE SEULE</span>
+  <span class="badge b-ai">AI POWERED</span>
+  <a href="avis-client.html" class="btn-avis">+ Déposer un avis</a>
+ </div>
+</div>
+
+<div class="cnt">
+ <div class="page-title">Analyses des avis clients</div>
+ <div class="page-sub">Tableau analytique · Lecture seule · Données en temps réel</div>
+
+ <div class="ro-notice">
+  <span>🔒</span>
+  <span>Cette page est en <strong>lecture seule</strong>. Vous pouvez consulter les analyses mais pas modifier les données. Pour déposer un avis, cliquez sur le bouton en haut à droite.</span>
+ </div>
+
+ <div class="ai-box"><div class="ai-label">▶ ANALYSE IA · Sentiment NLP automatique</div><div class="ai-text" id="ai-text">Chargement de l'analyse...</div></div>
+
+ <div class="krow">
+  <div class="kc"><div class="kl">TOTAL AVIS</div><div class="kv" id="k-total">—</div><div class="ks">Avis reçus</div></div>
+  <div class="kc"><div class="kl">NOTE MOYENNE</div><div class="kv" id="k-note">—</div><div class="ks">Sur 5 étoiles</div></div>
+  <div class="kc"><div class="kl">SATISFACTION</div><div class="kv" id="k-sat">—</div><div class="ks">Avis positifs IA</div></div>
+  <div class="kc"><div class="kl">PRODUITS NOTÉS</div><div class="kv" id="k-prods">—</div><div class="ks">Produits distincts</div></div>
+ </div>
+
+ <div class="r2">
+  <div class="card">
+   <div class="card-title">Distribution sentiment <span class="card-tag">NLP IA</span></div>
+   <div style="position:relative;height:180px;margin-bottom:14px;"><canvas id="c-sent"></canvas></div>
+   <div id="sent-stats"></div>
+  </div>
+  <div class="card">
+   <div class="card-title">Notes par étoiles <span class="card-tag">★ distribution</span></div>
+   <div style="position:relative;height:180px;margin-bottom:14px;"><canvas id="c-notes"></canvas></div>
+   <div id="notes-stats"></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="card-title">Note moyenne par produit <span class="card-tag">classement</span></div>
+  <div id="prod-scores"></div>
+ </div>
+
+ <div class="card">
+  <div class="card-title">Tous les avis <span class="card-tag" id="avis-count-tag">0</span></div>
+  <div class="filter-bar">
+   <button class="filter-btn on" onclick="setFilter('all',this)">Tous</button>
+   <button class="filter-btn" onclick="setFilter('positif',this)">✓ Positifs</button>
+   <button class="filter-btn" onclick="setFilter('neutre',this)">— Neutres</button>
+   <button class="filter-btn" onclick="setFilter('négatif',this)">✗ Négatifs</button>
+  </div>
+  <div id="avis-list" style="max-height:500px;overflow-y:auto;"></div>
+ </div>
+</div>
+
+<script>
+const AVIS_KEY='stockmind_avis';
+let currentFilter='all';
+let chartSent=null, chartNotes=null;
+
+function loadAvis(){
+  const d=localStorage.getItem(AVIS_KEY);
+  if(d) return JSON.parse(d);
+  return [];
+}
+
+function analyseText(t){
+  const l=t.toLowerCase();let sc=0;
+  ['excellent','très bon','super','parfait','satisfait','recommande','top','agréable','bon','pratique','qualité'].forEach(k=>{if(l.includes(k))sc+=.2;});
+  ['déçu','mauvais','horrible','cher','décevant','lent','problème','nul'].forEach(k=>{if(l.includes(k))sc-=.25;});
+  if(l.includes('pas')&&(l.includes('bien')||l.includes('bon')))sc-=.15;
+  sc=Math.max(-1,Math.min(1,sc));
+  return sc>.1?'positif':sc<-.1?'négatif':'neutre';
+}
+
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+function setFilter(f, el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderAvisList();
+}
+
+function render(){
+  const avis=loadAvis().map(a=>({...a,sentiment:analyseText(a.texte)}));
+  const pos=avis.filter(a=>a.sentiment==='positif').length;
+  const neu=avis.filter(a=>a.sentiment==='neutre').length;
+  const neg=avis.filter(a=>a.sentiment==='négatif').length;
+  const total=avis.length;
+  const sat=total?Math.round(pos/total*100):0;
+  const noteAvg=total?avis.reduce((s,a)=>s+a.note,0)/total:0;
+  const prods=[...new Set(avis.map(a=>a.produit))];
+
+  // KPIs
+  document.getElementById('k-total').textContent=total;
+  document.getElementById('k-note').textContent=noteAvg.toFixed(1)+' ★';
+  document.getElementById('k-sat').textContent=sat+'%';
+  document.getElementById('k-prods').textContent=prods.length;
+  document.getElementById('avis-count-tag').textContent=total+' avis';
+
+  // AI text
+  const topProd=prods.map(p=>{
+    const pa=avis.filter(a=>a.produit===p);
+    return {nom:p,avg:pa.reduce((s,a)=>s+a.note,0)/pa.length,cnt:pa.length};
+  }).sort((a,b)=>b.avg-a.avg)[0];
+  document.getElementById('ai-text').innerHTML=`<strong>${sat}%</strong> d'avis positifs sur <strong>${total}</strong> avis analysés par IA. Note moyenne : <strong>${noteAvg.toFixed(1)}/5 ★</strong>. ${topProd?`Produit le mieux noté : <strong>${topProd.nom}</strong> (${topProd.avg.toFixed(1)}/5 sur ${topProd.cnt} avis).`:''}`;
+
+  // Charts
+  if(chartSent) chartSent.destroy();
+  chartSent=new Chart(document.getElementById('c-sent'),{type:'doughnut',data:{labels:['Positifs','Neutres','Négatifs'],datasets:[{data:[pos,neu,neg],backgroundColor:['#00D68F','#7B9AC4','#FF6B6B'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
+
+  // Sent stats
+  document.getElementById('sent-stats').innerHTML=[{c:'#00D68F',n:'Positifs',v:pos,p:total?Math.round(pos/total*100):0},{c:'#7B9AC4',n:'Neutres',v:neu,p:total?Math.round(neu/total*100):0},{c:'#FF6B6B',n:'Négatifs',v:neg,p:total?Math.round(neg/total*100):0}].map(s=>`
+   <div class="stat-row"><span class="stat-dot" style="background:${s.c};"></span><span class="stat-name">${s.n}</span>
+   <div class="stat-bar"><div style="width:${s.p}%;height:100%;background:${s.c};border-radius:2px;"></div></div>
+   <span class="stat-n">${s.v} (${s.p}%)</span></div>`).join('');
+
+  // Notes chart
+  const notesDist=[1,2,3,4,5].map(n=>avis.filter(a=>a.note===n).length);
+  if(chartNotes) chartNotes.destroy();
+  chartNotes=new Chart(document.getElementById('c-notes'),{type:'bar',data:{labels:['1★','2★','3★','4★','5★'],datasets:[{data:notesDist,backgroundColor:['#FF6B6B88','#FFA72688','#FFD70088','#00D68F88','#00E5CC88'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7B9AC4',font:{size:10}}},y:{grid:{color:'rgba(30,111,255,0.08)'},ticks:{color:'#7B9AC4',font:{size:9},stepSize:1}}}}});
+
+  // Notes stats
+  document.getElementById('notes-stats').innerHTML=[5,4,3,2,1].map(n=>{
+    const cnt=notesDist[n-1];
+    const pct=total?Math.round(cnt/total*100):0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:11px;color:#FFD700;width:24px;">${n}★</span><div class="stat-bar"><div style="width:${pct}%;height:100%;background:#FFD700;border-radius:2px;opacity:${0.4+n*0.12};"></div></div><span class="stat-n">${cnt}</span></div>`;
+  }).join('');
+
+  // Prod scores
+  const prodScores=prods.map(p=>{
+    const pa=avis.filter(a=>a.produit===p);
+    return {nom:p,avg:pa.reduce((s,a)=>s+a.note,0)/pa.length,cnt:pa.length};
+  }).sort((a,b)=>b.avg-a.avg);
+  document.getElementById('prod-scores').innerHTML=prodScores.length===0
+    ? '<div style="text-align:center;padding:20px;color:var(--txts);font-size:12px;">Aucun avis pour le moment.</div>'
+    : prodScores.map(p=>`<div class="prod-score"><span class="prod-score-name">${p.nom}</span><span class="prod-score-stars">${stars(Math.round(p.avg))}</span><span style="font-size:11px;font-family:var(--mono);color:var(--cyan);width:32px;text-align:right;">${p.avg.toFixed(1)}</span><span class="prod-score-n">${p.cnt} avis</span></div>`).join('');
+
+  renderAvisList();
+}
+
+function renderAvisList(){
+  let avis=loadAvis().map(a=>({...a,sentiment:analyseText(a.texte)}));
+  if(currentFilter!=='all') avis=avis.filter(a=>a.sentiment===currentFilter);
+  avis=[...avis].reverse();
+  document.getElementById('avis-list').innerHTML=avis.length===0
+    ? '<div style="text-align:center;padding:30px;color:var(--txts);font-size:12px;">Aucun avis dans cette catégorie.</div>'
+    : avis.map(a=>`
+    <div class="rv">
+     <div class="rv-head">
+      <span class="rv-stars">${stars(a.note)}</span>
+      <span class="pill ${a.sentiment==='positif'?'p-pos':a.sentiment==='négatif'?'p-neg':'p-neu'}">${a.sentiment}</span>
+      <span style="font-size:10px;font-family:var(--mono);color:var(--txts);">${a.produit}</span>
+     </div>
+     <div class="rv-txt">"${a.texte}"</div>
+     <div class="rv-meta">${a.auteur} · ${a.date}</div>
+    </div>`).join('');
+}
+
+render();
+// Refresh every 30s to pick up new avis
+setInterval(render, 30000);
+</script>
+</body>
+</html>

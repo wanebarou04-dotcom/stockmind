@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockMind AI — Dashboard Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --navy:#0A1628;
+  --navy2:#0F1F3D;
+  --navy3:#162544;
+  --blue:#1E6FFF;
+  --blue2:#3B8FFF;
+  --cyan:#00E5CC;
+  --green:#00D68F;
+  --green2:#00B87A;
+  --grad:linear-gradient(135deg,#00E5CC,#1E6FFF);
+  --grad2:linear-gradient(135deg,#1E6FFF,#00D68F);
+  --txt:#E8F0FF;
+  --txts:#7B9AC4;
+  --brd:rgba(30,111,255,0.15);
+  --brd2:rgba(0,229,204,0.2);
+  --card:rgba(15,31,61,0.8);
+  --font:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --sw:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--navy);color:var(--txt);overflow-x:hidden;}
+/* GRID LINES BG */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(30,111,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(30,111,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+#app{display:flex;height:100vh;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sb{width:var(--sw);background:rgba(10,22,40,0.95);border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;backdrop-filter:blur(20px);}
+.sb-logo{padding:24px 20px 20px;border-bottom:1px solid var(--brd);}
+.sb-logo-icon{width:44px;height:44px;background:var(--grad);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 0 20px rgba(0,229,204,0.3);}
+.sb-logo-icon svg{width:24px;height:24px;}
+.sb-logo-name{font-size:18px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px;}
+.sb-logo-sub{font-size:9px;color:var(--txts);letter-spacing:2px;font-family:var(--mono);margin-top:1px;}
+.sb-nav{flex:1;padding:16px 0;overflow-y:auto;}
+.sb-sec{font-size:9px;color:var(--txts);padding:10px 20px 4px;letter-spacing:2px;font-family:var(--mono);}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:var(--txts);cursor:pointer;border-left:2px solid transparent;transition:all .15s;position:relative;}
+.ni:hover{color:var(--txt);background:rgba(30,111,255,0.05);}
+.ni.on{color:var(--cyan);border-left-color:var(--cyan);background:rgba(0,229,204,0.05);}
+.ni.on .ni-ic{color:var(--cyan);}
+.ni-ic{font-size:16px;width:18px;text-align:center;flex-shrink:0;}
+.sb-foot{padding:16px 20px;border-top:1px solid var(--brd);}
+.user-chip{display:flex;align-items:center;gap:10px;}
+.user-av{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.user-name{font-size:12px;font-weight:600;color:var(--txt);}
+.user-role{font-size:10px;color:var(--txts);font-family:var(--mono);}
+.sb-links{padding:12px 20px 0;border-top:1px solid var(--brd);margin-top:8px;}
+.ext-link{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txts);text-decoration:none;padding:6px 0;transition:color .15s;}
+.ext-link:hover{color:var(--cyan);}
+.ext-link-dot{width:6px;height:6px;border-radius:50%;background:var(--grad);flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--brd);background:rgba(10,22,40,0.9);backdrop-filter:blur(20px);flex-shrink:0;}
+.pg-title{font-size:20px;font-weight:700;color:var(--txt);}
+.pg-sub{font-size:11px;color:var(--txts);margin-top:2px;font-family:var(--mono);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.badge{font-size:9px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-weight:500;}
+.b-live{background:rgba(0,214,143,0.12);color:var(--green);border:.5px solid rgba(0,214,143,0.3);}
+.b-ai{background:rgba(30,111,255,0.12);color:var(--blue2);border:.5px solid rgba(30,111,255,0.3);}
+.cnt{flex:1;overflow-y:auto;padding:20px 24px;}
+.pg{display:none;}.pg.on{display:block;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:16px;backdrop-filter:blur(10px);}
+.card-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.card-tag{font-size:9px;font-family:var(--mono);color:var(--txts);padding:3px 8px;background:rgba(30,111,255,0.1);border-radius:4px;border:.5px solid var(--brd);font-weight:400;}
+
+/* KPI */
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.kc{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);}
+.kl{font-size:9px;color:var(--txts);letter-spacing:1.5px;margin-bottom:6px;font-family:var(--mono);}
+.kv{font-size:24px;font-weight:800;color:var(--txt);line-height:1;}
+.ks{font-size:10px;margin-top:5px;}
+.ku{color:var(--green);}
+.kd{color:#FF6B6B;}
+
+/* GRID LAYOUTS */
+.r2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:14px;}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.r22{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.mb{margin-bottom:14px;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{font-size:9px;font-family:var(--mono);color:var(--txts);letter-spacing:1px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--brd);}
+.tbl td{padding:10px 10px;border-bottom:1px solid rgba(30,111,255,0.07);color:var(--txt);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(30,111,255,0.04);}
+
+/* FORMS & BUTTONS */
+.inp{width:100%;padding:9px 12px;background:rgba(30,111,255,0.06);border:1px solid var(--brd);border-radius:8px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--cyan);}
+.inp::placeholder{color:var(--txts);}
+select.inp option{background:var(--navy2);color:var(--txt);}
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.btn-primary{background:var(--grad);color:#fff;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-danger{background:rgba(255,107,107,0.15);color:#FF6B6B;border:1px solid rgba(255,107,107,0.3);}
+.btn-danger:hover{background:rgba(255,107,107,0.25);}
+.btn-sm{padding:5px 11px;font-size:11px;}
+.btn-outline{background:transparent;color:var(--cyan);border:1px solid var(--brd2);}
+.btn-outline:hover{background:rgba(0,229,204,0.08);}
+
+/* PILLS */
+.pill{font-size:9px;padding:3px 9px;border-radius:10px;font-weight:600;}
+.p-pos{background:rgba(0,214,143,0.12);color:var(--green);}
+.p-neu{background:rgba(123,154,196,0.12);color:var(--txts);}
+.p-neg{background:rgba(255,107,107,0.12);color:#FF6B6B;}
+.p-ok{background:rgba(0,214,143,0.12);color:var(--green);}
+.p-warn{background:rgba(255,167,38,0.12);color:#FFA726;}
+.p-crit{background:rgba(255,107,107,0.12);color:#FF6B6B;}
+
+/* BARS */
+.br-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.br-lbl{font-size:11px;color:var(--txts);width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.br-trk{flex:1;height:5px;background:rgba(30,111,255,0.1);border-radius:3px;overflow:hidden;}
+.br-fill{height:100%;border-radius:3px;background:var(--grad);}
+.br-val{font-size:10px;font-family:var(--mono);color:var(--txts);width:40px;text-align:right;flex-shrink:0;}
+
+/* REVIEW CARDS */
+.rv{background:rgba(30,111,255,0.04);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:8px;}
+.rv-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rv-stars{color:#FFD700;font-size:12px;letter-spacing:1px;}
+.rv-txt{font-size:12px;color:var(--txt);line-height:1.6;font-style:italic;}
+.rv-meta{font-size:10px;color:var(--txts);margin-top:5px;font-family:var(--mono);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy2);border:1px solid var(--brd);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;color:var(--txts);cursor:pointer;font-size:18px;line-height:1;}
+.form-row{margin-bottom:12px;}
+.form-label{font-size:11px;color:var(--txts);margin-bottom:5px;display:block;font-family:var(--mono);letter-spacing:.5px;}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+
+/* STAT ROW */
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.stat-name{font-size:12px;color:var(--txts);flex:1;}
+.stat-bar{flex:1;height:4px;background:rgba(30,111,255,0.1);border-radius:2px;overflow:hidden;}
+.stat-n{font-size:11px;font-family:var(--mono);color:var(--txt);}
+
+/* AI INSIGHT */
+.ai-box{background:linear-gradient(135deg,rgba(0,229,204,0.04),rgba(30,111,255,0.04));border:1px solid rgba(0,229,204,0.15);border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+.ai-label{font-size:9px;font-family:var(--mono);color:var(--cyan);margin-bottom:4px;letter-spacing:1.5px;}
+.ai-text{font-size:12px;color:var(--txt);line-height:1.6;}
+
+/* GLOW */
+.glow{box-shadow:0 0 20px rgba(0,229,204,0.15);}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* NOTIFICATION */
+.notif{position:fixed;bottom:24px;right:24px;background:var(--grad);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;}
+.notif.show{opacity:1;transform:translateY(0);}
+
+/* RATING STARS INPUT */
+.star-input{display:flex;gap:4px;margin:4px 0;}
+.star-input span{font-size:22px;cursor:pointer;color:rgba(255,215,0,0.3);transition:color .1s;}
+.star-input span.on,.star-input span:hover~span{color:rgba(255,215,0,0.3);}
+.star-input span.on{color:#FFD700;}
+
+@media(max-width:900px){
+  .sb{display:none;}
+  .krow{grid-template-columns:repeat(2,1fr);}
+  .r2,.r22,.r3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+ <!-- SIDEBAR -->
+ <div class="sb">
+  <div class="sb-logo">
+   <div class="sb-logo-icon">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+     <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+     <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+   </div>
+   <div class="sb-logo-name">StockMind AI</div>
+   <div class="sb-logo-sub">SMART STOCK · INTELLIGENT DECISIONS</div>
+  </div>
+  <nav class="sb-nav">
+   <div class="sb-sec">ANALYTICS</div>
+   <div class="ni on" onclick="go('dash',this)"><span class="ni-ic">◈</span>Dashboard</div>
+   <div class="ni" onclick="go('analytics',this)"><span class="ni-ic">◉</span>IA Analytics</div>
+   <div class="ni" onclick="go('avis',this)"><span class="ni-ic">◎</span>Avis Clients</div>
+   <div class="sb-sec">GESTION</div>
+   <div class="ni" onclick="go('produits',this)"><span class="ni-ic">▣</span>Produits</div>
+   <div class="ni" onclick="go('stock',this)"><span class="ni-ic">▤</span>Stock</div>
+   <div class="ni" onclick="go('prix',this)"><span class="ni-ic">◆</span>Prix</div>
+  </nav>
+  <div class="sb-links">
+   <div style="font-size:9px;color:var(--txts);letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;">LIENS PUBLICS</div>
+   <a href="avis-client.html" target="_blank" class="ext-link"><span class="ext-link-dot"></span>Page dépôt d'avis clients</a>
+   <a href="analytics-client.html" target="_blank" class="ext-link"><span class="ext-link-dot"></span>Vue analytique client</a>
+  </div>
+  <div class="sb-foot">
+   <div class="user-chip">
+    <div class="user-av">AD</div>
+    <div><div class="user-name">Administrateur</div><div class="user-role">admin · JWT</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- MAIN -->
+ <div class="main">
+  <div class="topbar">
+   <div><div class="pg-title" id="pgt">Dashboard Overview</div><div class="pg-sub" id="pgs">StockMind AI · Gestion intelligente du stock</div></div>
+   <div class="topbar-right">
+    <span class="badge b-live">● LIVE</span>
+    <span class="badge b-ai">AI POWERED</span>
+    <button class="btn btn-outline btn-sm" onclick="exportData()">↓ Export</button>
+   </div>
+  </div>
+
+  <div class="cnt">
+
+   <!-- === DASHBOARD === -->
+   <div class="pg on" id="pg-dash">
+    <div class="krow">
+     <div class="kc"><div class="kl">PRODUITS ACTIFS</div><div class="kv" id="kpi-prod">—</div><div class="ks ku" id="kpi-prod-s">↑ En stock</div></div>
+     <div class="kc"><div class="kl">VALEUR STOCK</div><div class="kv" id="kpi-val">—</div><div class="ks ku">↑ Valorisation totale</div></div>
+     <div class="kc"><div class="kl">ALERTES STOCK</div><div class="kv kd" id="kpi-alert">—</div><div class="ks kd">⚠ Rupture proche</div></div>
+     <div class="kc"><div class="kl">SATISFACTION IA</div><div class="kv" id="kpi-sat">—</div><div class="ks ku">↑ Avis positifs</div></div>
+    </div>
+    <div class="r2 mb">
+     <div class="card">
+      <div class="card-title">Stock par catégorie <span class="card-tag">unités</span></div>
+      <div style="position:relative;height:180px;"><canvas id="c-cat"></canvas></div>
+     </div>
+     <div class="card">
+      <div class="card-title">Top produits <span class="card-tag">valeur stock</span></div>
+      <div id="top-bars"></div>
+     </div>
+    </div>
+    <div class="r3">
+     <div class="card">
+      <div class="card-title">Alertes stock</div>
+      <div id="alerts-list"></div>
+     </div>
+     <div class="card">
+      <div class="card-title">Sentiment client <span class="card-tag">NLP</span></div>
+      <div id="sent-dash"></div>
+     </div>
+     <div class="card">
+      <div class="card-title">Répartition prix</div>
+      <div style="position:relative;height:130px;"><canvas id="c-prix"></canvas></div>
+     </div>
+    </div>
+   </div>
+
+   <!-- === IA ANALYTICS === -->
+   <div class="pg" id="pg-analytics">
+    <div class="ai-box"><div class="ai-label">▶ INSIGHT IA · Analyse automatique</div><div class="ai-text" id="ai-insight-text">Chargement de l'analyse IA...</div></div>
+    <div class="r22 mb">
+     <div class="card">
+      <div class="card-title">Valeur stock par produit <span class="card-tag">€</span></div>
+      <div style="position:relative;height:220px;"><canvas id="c-val"></canvas></div>
+     </div>
+     <div class="card">
+      <div class="card-title">Distribution des prix <span class="card-tag">€/unité</span></div>
+      <div style="position:relative;height:220px;"><canvas id="c-distrib"></canvas></div>
+     </div>
+    </div>
+    <div class="card">
+     <div class="card-title">Analyse stock critique <span class="card-tag">seuil alerte</span></div>
+     <table class="tbl">
+      <thead><tr><th>PRODUIT</th><th>CATÉGORIE</th><th>STOCK</th><th>SEUIL</th><th>PRIX</th><th>STATUT</th></tr></thead>
+      <tbody id="analytics-table"></tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- === AVIS CLIENTS === -->
+   <div class="pg" id="pg-avis">
+    <div class="ai-box"><div class="ai-label">▶ NLP ANALYSIS · Sentiment FR</div><div class="ai-text" id="sent-insight">Analyse en cours...</div></div>
+    <div class="r22 mb">
+     <div class="card">
+      <div class="card-title">Avis clients reçus <span class="card-tag" id="avis-count-tag">0 avis</span></div>
+      <div id="avis-list" style="max-height:340px;overflow-y:auto;"></div>
+     </div>
+     <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card-title">Distribution sentiment</div>
+      <div style="position:relative;height:180px;"><canvas id="c-sent"></canvas></div>
+      <div id="sent-stats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+       <div style="background:rgba(30,111,255,0.06);border-radius:10px;padding:12px;border:1px solid var(--brd);">
+        <div style="font-size:9px;font-family:var(--mono);color:var(--txts);margin-bottom:4px;">SCORE MOYEN</div>
+        <div style="font-size:20px;font-weight:800;" id="score-moy">—</div>
+       </div>
+       <div style="background:rgba(30,111,255,0.06);border-radius:10px;padding:12px;border:1px solid var(--brd);">
+        <div style="font-size:9px;font-family:var(--mono);color:var(--txts);margin-bottom:4px;">NOTE MOYENNE</div>
+        <div style="font-size:20px;font-weight:800;color:#FFD700;" id="note-moy">—</div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <!-- === PRODUITS === -->
+   <div class="pg" id="pg-produits">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+     <div style="display:flex;gap:10px;align-items:center;">
+      <input class="inp" id="search-prod" placeholder="🔍 Rechercher un produit..." style="width:260px;" oninput="renderProduits()">
+      <select class="inp" id="filter-cat" style="width:160px;" onchange="renderProduits()"><option value="">Toutes catégories</option></select>
+     </div>
+     <button class="btn btn-primary" onclick="openModal('add')">+ Ajouter produit</button>
+    </div>
+    <div class="card">
+     <table class="tbl">
+      <thead><tr><th>PRODUIT</th><th>CATÉGORIE</th><th>STOCK</th><th>SEUIL</th><th>PRIX</th><th>VALEUR</th><th>STATUT</th><th>ACTIONS</th></tr></thead>
+      <tbody id="prod-table"></tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- === STOCK === -->
+   <div class="pg" id="pg-stock">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+     <div style="font-size:13px;color:var(--txts);">Modifiez les quantités en stock directement depuis ce tableau.</div>
+     <button class="btn btn-primary btn-sm" onclick="saveAllStock()">💾 Sauvegarder tout</button>
+    </div>
+    <div class="card">
+     <table class="tbl">
+      <thead><tr><th>PRODUIT</th><th>CATÉGORIE</th><th>STOCK ACTUEL</th><th>AJUSTEMENT</th><th>SEUIL ALERTE</th><th>STATUT</th></tr></thead>
+      <tbody id="stock-table"></tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- === PRIX === -->
+   <div class="pg" id="pg-prix">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+     <div style="font-size:13px;color:var(--txts);">Modifiez les prix unitaires directement depuis ce tableau.</div>
+     <button class="btn btn-primary btn-sm" onclick="saveAllPrix()">💾 Sauvegarder tout</button>
+    </div>
+    <div class="card">
+     <table class="tbl">
+      <thead><tr><th>PRODUIT</th><th>CATÉGORIE</th><th>PRIX ACTUEL</th><th>NOUVEAU PRIX</th><th>VARIATION</th><th>APPLIQUER</th></tr></thead>
+      <tbody id="prix-table"></tbody>
+     </table>
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<!-- MODAL AJOUT/EDIT PRODUIT -->
+<div class="modal-overlay" id="modal">
+ <div class="modal">
+  <div class="modal-title">
+   <span id="modal-title-txt">Ajouter un produit</span>
+   <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="form-row"><label class="form-label">NOM DU PRODUIT</label><input class="inp" id="f-nom" placeholder="Ex: Laptop Dell XPS 15"></div>
+  <div class="form-row"><label class="form-label">CATÉGORIE</label>
+   <select class="inp" id="f-cat">
+    <option>Électronique</option><option>Mobilier</option><option>Textile</option><option>Alimentaire</option><option>Hygiène</option><option>Autre</option>
+   </select>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+   <div class="form-row"><label class="form-label">STOCK INITIAL</label><input class="inp" id="f-stock" type="number" min="0" placeholder="0"></div>
+   <div class="form-row"><label class="form-label">SEUIL ALERTE</label><input class="inp" id="f-seuil" type="number" min="0" placeholder="10"></div>
+  </div>
+  <div class="form-row"><label class="form-label">PRIX UNITAIRE (€)</label><input class="inp" id="f-prix" type="number" step="0.01" min="0" placeholder="0.00"></div>
+  <div class="form-row"><label class="form-label">DESCRIPTION</label><input class="inp" id="f-desc" placeholder="Description courte..."></div>
+  <div class="form-actions">
+   <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+   <button class="btn btn-primary" onclick="saveProduct()">Enregistrer</button>
+  </div>
+ </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ── DATA STORE (localStorage) ──────────────────────────────────
+const STORE_KEY = 'stockmind_products';
+const AVIS_KEY  = 'stockmind_avis';
+
+function loadProducts() {
+  const d = localStorage.getItem(STORE_KEY);
+  if (d) return JSON.parse(d);
+  // Default demo data
+  const demo = [
+    {id:1,nom:'Laptop Dell XPS 15',cat:'Électronique',stock:23,seuil:5,prix:1299.99,desc:'Ordinateur portable pro 15 pouces'},
+    {id:2,nom:'Écran Samsung 27"',cat:'Électronique',stock:8,seuil:10,prix:349.00,desc:'Moniteur 4K IPS 27 pouces'},
+    {id:3,nom:'Chaise ergonomique',cat:'Mobilier',stock:15,seuil:8,prix:249.50,desc:'Chaise de bureau réglable'},
+    {id:4,nom:'Bureau assis-debout',cat:'Mobilier',stock:4,seuil:5,prix:599.00,desc:'Bureau électrique réglable en hauteur'},
+    {id:5,nom:'Casque Sony WH-1000XM5',cat:'Électronique',stock:31,seuil:10,prix:349.99,desc:'Casque audio à réduction de bruit'},
+    {id:6,nom:'Chemise Business',cat:'Textile',stock:67,seuil:20,prix:49.90,desc:'Chemise coton premium'},
+    {id:7,nom:'Café Arabica 1kg',cat:'Alimentaire',stock:2,seuil:10,prix:18.50,desc:'Café arabica torréfié artisanal'},
+    {id:8,nom:'Gel hydroalcoolique',cat:'Hygiène',stock:55,seuil:15,prix:4.99,desc:'Désinfectant mains 500ml'},
+  ];
+  localStorage.setItem(STORE_KEY, JSON.stringify(demo));
+  return demo;
+}
+
+function saveProducts(arr) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(arr));
+}
+
+function loadAvis() {
+  const d = localStorage.getItem(AVIS_KEY);
+  if (d) return JSON.parse(d);
+  const demo = [
+    {id:1,produit:'Laptop Dell XPS 15',auteur:'Marie L.',note:5,texte:'Excellent produit, très rapide et beau design. Je recommande vivement !',sentiment:'positif',date:'2025-04-20'},
+    {id:2,produit:'Chaise ergonomique',auteur:'Thomas B.',note:4,texte:'Très confortable, bonne qualité. Un peu complexe à assembler.',sentiment:'positif',date:'2025-04-18'},
+    {id:3,produit:'Café Arabica 1kg',auteur:'Sophie M.',note:2,texte:'Déçu par la qualité, goût trop amer et prix élevé pour ce résultat.',sentiment:'négatif',date:'2025-04-15'},
+    {id:4,produit:'Écran Samsung 27"',auteur:'Karim R.',note:5,texte:'Image parfaite, couleurs vives. Rapport qualité/prix excellent.',sentiment:'positif',date:'2025-04-12'},
+    {id:5,produit:'Casque Sony WH-1000XM5',auteur:'Amina T.',note:4,texte:'Bonne réduction de bruit, confortable pour de longues sessions.',sentiment:'positif',date:'2025-04-10'},
+    {id:6,produit:'Café Arabica 1kg',auteur:'Jean P.',note:3,texte:'Café correct mais pas exceptionnel. Prix raisonnable.',sentiment:'neutre',date:'2025-04-08'},
+    {id:7,produit:'Bureau assis-debout',auteur:'Léa V.',note:5,texte:'Superbe bureau ! Pratique, stable, et le moteur est silencieux.',sentiment:'positif',date:'2025-04-05'},
+  ];
+  localStorage.setItem(AVIS_KEY, JSON.stringify(demo));
+  return demo;
+}
+
+// ── NAV ────────────────────────────────────────────────────────
+const pages={
+  dash:{id:'pg-dash',t:'Dashboard Overview',s:'StockMind AI · Gestion intelligente du stock'},
+  analytics:{id:'pg-analytics',t:'IA Analytics',s:'Analyse avancée · Insights automatiques'},
+  avis:{id:'pg-avis',t:'Avis Clients',s:'Sentiment NLP · Analyse des retours clients'},
+  produits:{id:'pg-produits',t:'Gestion Produits',s:'Modifier · Ajouter · Supprimer'},
+  stock:{id:'pg-stock',t:'Gestion des Stocks',s:'Mise à jour des quantités en temps réel'},
+  prix:{id:'pg-prix',t:'Gestion des Prix',s:'Modifier les prix unitaires'},
+};
+
+function go(k,el){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById(pages[k].id).classList.add('on');
+  document.getElementById('pgt').textContent=pages[k].t;
+  document.getElementById('pgs').textContent=pages[k].s;
+  if(k==='dash') renderDash();
+  if(k==='analytics') renderAnalytics();
+  if(k==='avis') renderAvis();
+  if(k==='produits') renderProduits();
+  if(k==='stock') renderStock();
+  if(k==='prix') renderPrix();
+}
+
+// ── MODAL ──────────────────────────────────────────────────────
+let editId = null;
+function openModal(mode,id=null){
+  editId=id;
+  document.getElementById('modal-title-txt').textContent = id ? 'Modifier le produit' : 'Ajouter un produit';
+  if(id){
+    const p = loadProducts().find(x=>x.id===id);
+    document.getElementById('f-nom').value=p.nom;
+    document.getElementById('f-cat').value=p.cat;
+    document.getElementById('f-stock').value=p.stock;
+    document.getElementById('f-seuil').value=p.seuil;
+    document.getElementById('f-prix').value=p.prix;
+    document.getElementById('f-desc').value=p.desc||'';
+  } else {
+    ['f-nom','f-stock','f-seuil','f-prix','f-desc'].forEach(id=>document.getElementById(id).value='');
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); editId=null; }
+function saveProduct(){
+  const nom=document.getElementById('f-nom').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const stock=parseInt(document.getElementById('f-stock').value)||0;
+  const seuil=parseInt(document.getElementById('f-seuil').value)||10;
+  const prix=parseFloat(document.getElementById('f-prix').value)||0;
+  const desc=document.getElementById('f-desc').value;
+  if(!nom){ notify('❌ Le nom est obligatoire'); return; }
+  let prods=loadProducts();
+  if(editId){
+    prods=prods.map(p=>p.id===editId?{...p,nom,cat,stock,seuil,prix,desc}:p);
+    notify('✅ Produit modifié avec succès');
+  } else {
+    const newId=Math.max(0,...prods.map(p=>p.id))+1;
+    prods.push({id:newId,nom,cat,stock,seuil,prix,desc});
+    notify('✅ Produit ajouté avec succès');
+  }
+  saveProducts(prods);
+  closeModal();
+  renderProduits();
+  renderDash();
+}
+function deleteProduct(id){
+  if(!confirm('Supprimer ce produit ?')) return;
+  const prods=loadProducts().filter(p=>p.id!==id);
+  saveProducts(prods);
+  renderProduits(); renderDash();
+  notify('🗑 Produit supprimé');
+}
+
+// ── NOTIFY ─────────────────────────────────────────────────────
+function notify(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function fmt(n){return Number(n).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function getStatus(p){
+  if(p.stock===0) return {lbl:'Rupture',cls:'p-neg'};
+  if(p.stock<=p.seuil) return {lbl:'Critique',cls:'p-warn'};
+  return {lbl:'OK',cls:'p-ok'};
+}
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+let chartCat=null, chartPrix=null;
+function renderDash(){
+  const prods=loadProducts();
+  const avis=loadAvis();
+  const total=prods.reduce((s,p)=>s+p.stock*p.prix,0);
+  const alerts=prods.filter(p=>p.stock<=p.seuil);
+  const pos=avis.filter(a=>a.sentiment==='positif').length;
+  const sat=avis.length?Math.round(pos/avis.length*100):0;
+  document.getElementById('kpi-prod').textContent=prods.length;
+  document.getElementById('kpi-val').textContent=fmt(total)+'€';
+  document.getElementById('kpi-alert').textContent=alerts.length;
+  document.getElementById('kpi-sat').textContent=sat+'%';
+
+  // Top bars
+  const sorted=[...prods].sort((a,b)=>(b.stock*b.prix)-(a.stock*a.prix)).slice(0,6);
+  const maxV=sorted[0].stock*sorted[0].prix;
+  document.getElementById('top-bars').innerHTML=sorted.map(p=>{
+    const v=p.stock*p.prix;
+    return `<div class="br-row"><span class="br-lbl">${p.nom.split(' ').slice(0,2).join(' ')}</span><div class="br-trk"><div class="br-fill" style="width:${Math.round(v/maxV*100)}%;"></div></div><span class="br-val">${fmt(v)}€</span></div>`;
+  }).join('');
+
+  // Alerts
+  document.getElementById('alerts-list').innerHTML=alerts.length===0
+    ? '<div style="font-size:12px;color:var(--green);text-align:center;padding:20px;">✓ Aucune alerte stock</div>'
+    : alerts.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--brd);font-size:12px;"><span style="color:var(--txt);">${p.nom.split(' ').slice(0,3).join(' ')}</span><span class="pill ${p.stock===0?'p-neg':'p-warn'}">${p.stock} u.</span></div>`).join('');
+
+  // Sentiment
+  const neu=avis.filter(a=>a.sentiment==='neutre').length;
+  const neg=avis.filter(a=>a.sentiment==='négatif').length;
+  const noteAvg=avis.length?avis.reduce((s,a)=>s+a.note,0)/avis.length:0;
+  document.getElementById('sent-dash').innerHTML=`
+   <div style="text-align:center;margin-bottom:12px;"><div style="font-size:26px;font-weight:800;color:var(--green);">${sat}%</div><div style="font-size:10px;color:var(--txts);">Avis positifs</div></div>
+   <div class="stat-row"><span class="stat-dot" style="background:var(--green);"></span><span class="stat-name">Positifs</span><span class="stat-n">${pos}</span></div>
+   <div class="stat-row"><span class="stat-dot" style="background:var(--txts);"></span><span class="stat-name">Neutres</span><span class="stat-n">${neu}</span></div>
+   <div class="stat-row"><span class="stat-dot" style="background:#FF6B6B;"></span><span class="stat-name">Négatifs</span><span class="stat-n">${neg}</span></div>
+   <div style="margin-top:8px;font-size:11px;color:var(--txts);">Note moyenne : <span style="color:#FFD700;font-weight:700;">${noteAvg.toFixed(1)}/5</span></div>`;
+
+  // Cat chart
+  const cats={};
+  prods.forEach(p=>{ cats[p.cat]=(cats[p.cat]||0)+p.stock; });
+  if(chartCat) chartCat.destroy();
+  chartCat=new Chart(document.getElementById('c-cat'),{type:'doughnut',data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#1E6FFF','#00E5CC','#00D68F','#3B8FFF','#FFA726','#7B9AC4'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:'#7B9AC4',font:{size:10},padding:8}}}}});
+
+  // Prix distribution
+  const ranges={'<50€':0,'50-200€':0,'200-500€':0,'>500€':0};
+  prods.forEach(p=>{if(p.prix<50)ranges['<50€']++;else if(p.prix<200)ranges['50-200€']++;else if(p.prix<500)ranges['200-500€']++;else ranges['>500€']++;});
+  if(chartPrix) chartPrix.destroy();
+  chartPrix=new Chart(document.getElementById('c-prix'),{type:'bar',data:{labels:Object.keys(ranges),datasets:[{data:Object.values(ranges),backgroundColor:['#00E5CC88','#1E6FFF88','#00D68F88','#3B8FFF88'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7B9AC4',font:{size:9}}},y:{grid:{color:'rgba(30,111,255,0.08)'},ticks:{color:'#7B9AC4',font:{size:9}}}}}});
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────
+let chartVal=null, chartDist=null;
+function renderAnalytics(){
+  const prods=loadProducts();
+  const alerts=prods.filter(p=>p.stock<=p.seuil);
+  const topProd=prods.reduce((a,b)=>b.stock*b.prix>a.stock*a.prix?b:a,prods[0]);
+
+  document.getElementById('ai-insight-text').innerHTML=`
+   Analyse de <strong>${prods.length} produits</strong> actifs. 
+   <strong>${alerts.length} alerte(s)</strong> de stock critique détectée(s).
+   Produit le plus valorisé : <strong>${topProd?.nom}</strong> (${fmt(topProd?.stock*topProd?.prix)}€).
+   Valeur totale du stock : <strong>${fmt(prods.reduce((s,p)=>s+p.stock*p.prix,0))}€</strong>.
+   Recommandation : réapprovisionner en priorité les produits en dessous du seuil d'alerte.`;
+
+  // Chart valeur
+  const sortedVal=[...prods].sort((a,b)=>b.stock*b.prix-a.stock*a.prix);
+  if(chartVal) chartVal.destroy();
+  chartVal=new Chart(document.getElementById('c-val'),{type:'bar',data:{labels:sortedVal.map(p=>p.nom.split(' ').slice(0,2).join(' ')),datasets:[{data:sortedVal.map(p=>p.stock*p.prix),backgroundColor:sortedVal.map((_,i)=>i===0?'#00E5CC':i===1?'#1E6FFF':'#3B8FFF55'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7B9AC4',font:{size:9}}},y:{grid:{color:'rgba(30,111,255,0.08)'},ticks:{color:'#7B9AC4',font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'K€':v+'€'}}}}});
+
+  // Chart distribution prix
+  if(chartDist) chartDist.destroy();
+  chartDist=new Chart(document.getElementById('c-distrib'),{type:'bar',data:{labels:prods.map(p=>p.nom.split(' ').slice(0,2).join(' ')),datasets:[{data:prods.map(p=>p.prix),backgroundColor:'#00D68F66',borderRadius:4,label:'Prix €'}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(30,111,255,0.08)'},ticks:{color:'#7B9AC4',font:{size:9},callback:v=>v+'€'}},y:{grid:{display:false},ticks:{color:'#7B9AC4',font:{size:9}}}}}});
+
+  // Table
+  document.getElementById('analytics-table').innerHTML=prods.map(p=>{
+    const st=getStatus(p);
+    return `<tr><td>${p.nom}</td><td>${p.cat}</td><td><strong>${p.stock}</strong></td><td>${p.seuil}</td><td>${fmt(p.prix)}€</td><td><span class="pill ${st.cls}">${st.lbl}</span></td></tr>`;
+  }).join('');
+}
+
+// ── AVIS ──────────────────────────────────────────────────────
+let chartSent=null;
+function analyseText(t){
+  const l=t.toLowerCase();
+  let sc=0;
+  ['excellent','très bon','super','parfait','satisfait','recommande','top','agréable','bon','pratique','qualité'].forEach(k=>{if(l.includes(k))sc+=.2;});
+  ['déçu','mauvais','horrible','cher','décevant','lent','problème','nul'].forEach(k=>{if(l.includes(k))sc-=.25;});
+  if(l.includes('pas')&&(l.includes('bien')||l.includes('bon'))) sc-=.15;
+  sc=Math.max(-1,Math.min(1,sc));
+  return sc>.1?'positif':sc<-.1?'négatif':'neutre';
+}
+
+function renderAvis(){
+  const avis=loadAvis();
+  // Re-analyse sentiment
+  avis.forEach(a=>a.sentiment=analyseText(a.texte));
+  localStorage.setItem(AVIS_KEY,JSON.stringify(avis));
+
+  const pos=avis.filter(a=>a.sentiment==='positif').length;
+  const neu=avis.filter(a=>a.sentiment==='neutre').length;
+  const neg=avis.filter(a=>a.sentiment==='négatif').length;
+  const sat=avis.length?Math.round(pos/avis.length*100):0;
+  const noteAvg=avis.length?avis.reduce((s,a)=>s+a.note,0)/avis.length:0;
+  const scoreAvg=avis.length?avis.reduce((s,a)=>{const sc=analyseText(a.texte);const n=sc>.1?sc:-0.1;return s+n;},0)/avis.length:0;
+
+  document.getElementById('sent-insight').innerHTML=`<strong>${sat}%</strong> d'avis positifs sur <strong>${avis.length}</strong> avis analysés. Note moyenne : <strong>${noteAvg.toFixed(1)}/5 ★</strong>. Sentiment IA : score moyen <strong>${scoreAvg.toFixed(2)}</strong>.`;
+  document.getElementById('avis-count-tag').textContent=avis.length+' avis';
+  document.getElementById('score-moy').textContent=scoreAvg.toFixed(2);
+  document.getElementById('score-moy').style.color=scoreAvg>0?'var(--green)':'#FF6B6B';
+  document.getElementById('note-moy').textContent=noteAvg.toFixed(1)+'/5';
+
+  // List
+  document.getElementById('avis-list').innerHTML=avis.length===0
+    ? '<div style="text-align:center;padding:30px;color:var(--txts);font-size:12px;">Aucun avis reçu pour l\'instant.</div>'
+    : [...avis].reverse().map(a=>`
+    <div class="rv">
+     <div class="rv-head">
+      <span class="rv-stars">${stars(a.note)}</span>
+      <span class="pill ${a.sentiment==='positif'?'p-pos':a.sentiment==='négatif'?'p-neg':'p-neu'}">${a.sentiment}</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--txts);font-family:var(--mono);">${a.produit}</span>
+     </div>
+     <div class="rv-txt">"${a.texte}"</div>
+     <div class="rv-meta">${a.auteur} · ${a.date}</div>
+    </div>`).join('');
+
+  // Pie chart
+  if(chartSent) chartSent.destroy();
+  chartSent=new Chart(document.getElementById('c-sent'),{type:'doughnut',data:{labels:['Positif','Neutre','Négatif'],datasets:[{data:[pos,neu,neg],backgroundColor:['#00D68F','#7B9AC4','#FF6B6B'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
+
+  // Stats
+  document.getElementById('sent-stats').innerHTML=[{c:'#00D68F',n:'Positifs',v:pos,p:sat},{c:'#7B9AC4',n:'Neutres',v:neu,p:avis.length?Math.round(neu/avis.length*100):0},{c:'#FF6B6B',n:'Négatifs',v:neg,p:avis.length?Math.round(neg/avis.length*100):0}].map(s=>`
+   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+    <span class="stat-dot" style="background:${s.c};"></span>
+    <span class="stat-name">${s.n}</span>
+    <div class="stat-bar"><div style="width:${s.p}%;height:100%;background:${s.c};border-radius:2px;"></div></div>
+    <span class="stat-n">${s.v} (${s.p}%)</span>
+   </div>`).join('');
+}
+
+// ── PRODUITS ──────────────────────────────────────────────────
+function renderProduits(){
+  const prods=loadProducts();
+  const search=document.getElementById('search-prod').value.toLowerCase();
+  const catF=document.getElementById('filter-cat').value;
+  const cats=[...new Set(prods.map(p=>p.cat))];
+  const sel=document.getElementById('filter-cat');
+  const curVal=sel.value;
+  sel.innerHTML='<option value="">Toutes catégories</option>'+cats.map(c=>`<option ${c===curVal?'selected':''}>${c}</option>`).join('');
+  const filtered=prods.filter(p=>{
+    const matchSearch=!search||p.nom.toLowerCase().includes(search)||p.cat.toLowerCase().includes(search);
+    const matchCat=!catF||p.cat===catF;
+    return matchSearch&&matchCat;
+  });
+  document.getElementById('prod-table').innerHTML=filtered.map(p=>{
+    const st=getStatus(p);
+    return `<tr>
+     <td><strong style="color:var(--txt);">${p.nom}</strong>${p.desc?`<br><span style="font-size:10px;color:var(--txts);">${p.desc}</span>`:''}</td>
+     <td><span style="font-size:11px;color:var(--txts);">${p.cat}</span></td>
+     <td><strong>${p.stock}</strong></td>
+     <td>${p.seuil}</td>
+     <td><strong style="color:var(--cyan);">${fmt(p.prix)}€</strong></td>
+     <td>${fmt(p.stock*p.prix)}€</td>
+     <td><span class="pill ${st.cls}">${st.lbl}</span></td>
+     <td>
+      <button class="btn btn-sm btn-outline" onclick="openModal('edit',${p.id})" style="margin-right:4px;">✏</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">🗑</button>
+     </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── STOCK ─────────────────────────────────────────────────────
+function renderStock(){
+  const prods=loadProducts();
+  document.getElementById('stock-table').innerHTML=prods.map(p=>{
+    const st=getStatus(p);
+    return `<tr>
+     <td><strong>${p.nom}</strong></td>
+     <td>${p.cat}</td>
+     <td><strong>${p.stock}</strong> unités</td>
+     <td>
+      <div style="display:flex;align-items:center;gap:6px;">
+       <button class="btn btn-sm btn-outline" onclick="adjStock(${p.id},-1)" style="padding:4px 8px;">−</button>
+       <input type="number" class="inp" id="s-${p.id}" value="${p.stock}" min="0" style="width:80px;text-align:center;">
+       <button class="btn btn-sm btn-outline" onclick="adjStock(${p.id},1)" style="padding:4px 8px;">+</button>
+      </div>
+     </td>
+     <td><input type="number" class="inp" id="seuil-${p.id}" value="${p.seuil}" min="0" style="width:80px;"></td>
+     <td><span class="pill ${st.cls}">${st.lbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function adjStock(id,delta){
+  const inp=document.getElementById('s-'+id);
+  inp.value=Math.max(0,parseInt(inp.value)||0+delta);
+}
+
+function saveAllStock(){
+  let prods=loadProducts();
+  prods=prods.map(p=>{
+    const si=document.getElementById('s-'+p.id);
+    const se=document.getElementById('seuil-'+p.id);
+    if(si) p.stock=parseInt(si.value)||0;
+    if(se) p.seuil=parseInt(se.value)||0;
+    return p;
+  });
+  saveProducts(prods);
+  notify('✅ Stocks mis à jour avec succès');
+  renderStock();
+  renderDash();
+}
+
+// ── PRIX ──────────────────────────────────────────────────────
+function renderPrix(){
+  const prods=loadProducts();
+  document.getElementById('prix-table').innerHTML=prods.map(p=>`<tr>
+   <td><strong>${p.nom}</strong></td>
+   <td>${p.cat}</td>
+   <td><strong style="color:var(--cyan);">${fmt(p.prix)}€</strong></td>
+   <td><input type="number" class="inp" id="px-${p.id}" value="${p.prix}" step="0.01" min="0" style="width:110px;" oninput="updateVariation(${p.id},${p.prix})"></td>
+   <td id="var-${p.id}" style="font-family:var(--mono);font-size:11px;">—</td>
+   <td><button class="btn btn-primary btn-sm" onclick="applyPrix(${p.id},${p.prix})">Appliquer</button></td>
+  </tr>`).join('');
+}
+
+function updateVariation(id,old){
+  const newV=parseFloat(document.getElementById('px-'+id).value)||0;
+  const pct=old?((newV-old)/old*100):0;
+  const el=document.getElementById('var-'+id);
+  el.textContent=(pct>=0?'+':'')+pct.toFixed(1)+'%';
+  el.style.color=pct>0?'var(--green)':pct<0?'#FF6B6B':'var(--txts)';
+}
+
+function applyPrix(id,old){
+  const newV=parseFloat(document.getElementById('px-'+id).value)||0;
+  let prods=loadProducts();
+  prods=prods.map(p=>p.id===id?{...p,prix:newV}:p);
+  saveProducts(prods);
+  notify(`✅ Prix mis à jour : ${fmt(newV)}€`);
+  renderPrix(); renderDash();
+}
+
+function saveAllPrix(){
+  let prods=loadProducts();
+  prods=prods.map(p=>{
+    const inp=document.getElementById('px-'+p.id);
+    if(inp) p.prix=parseFloat(inp.value)||p.prix;
+    return p;
+  });
+  saveProducts(prods);
+  notify('✅ Tous les prix mis à jour');
+  renderPrix(); renderDash();
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+function exportData(){
+  const prods=loadProducts();
+  const csv=['Nom,Catégorie,Stock,Seuil,Prix,Valeur',...prods.map(p=>`"${p.nom}","${p.cat}",${p.stock},${p.seuil},${p.prix},${p.stock*p.prix}`)].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='stockmind_export.csv';
+  a.click();
+  notify('📥 Export CSV téléchargé');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderDash();
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockMind AI — Déposer un avis</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A1628;
+  --navy2:#0F1F3D;
+  --blue:#1E6FFF;
+  --cyan:#00E5CC;
+  --green:#00D68F;
+  --grad:linear-gradient(135deg,#00E5CC,#1E6FFF);
+  --txt:#E8F0FF;
+  --txts:#7B9AC4;
+  --brd:rgba(30,111,255,0.15);
+  --font:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--navy);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:32px 16px;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(30,111,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(30,111,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:40px;}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;}
+.logo-ic{width:48px;height:48px;background:var(--grad);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(0,229,204,0.25);}
+.logo-ic svg{width:26px;height:26px;}
+.logo-name{font-size:24px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header h1{font-size:28px;font-weight:700;color:var(--txt);margin-bottom:8px;}
+.header p{font-size:14px;color:var(--txts);max-width:460px;line-height:1.6;}
+
+/* FORM CARD */
+.form-card{background:rgba(15,31,61,0.9);border:1px solid var(--brd);border-radius:20px;padding:36px;width:100%;max-width:560px;backdrop-filter:blur(20px);position:relative;z-index:1;}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);border-radius:20px 20px 0 0;}
+.section-title{font-size:11px;font-family:var(--mono);color:var(--txts);letter-spacing:2px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--brd);}
+
+/* STARS */
+.stars-wrap{margin-bottom:24px;}
+.stars-label{font-size:11px;font-family:var(--mono);color:var(--txts);letter-spacing:.5px;margin-bottom:10px;display:block;}
+.stars{display:flex;gap:8px;margin-bottom:6px;}
+.star{font-size:36px;cursor:pointer;color:rgba(255,215,0,0.2);transition:all .15s;user-select:none;line-height:1;}
+.star:hover,.star.on{color:#FFD700;text-shadow:0 0 12px rgba(255,215,0,0.4);}
+.stars-text{font-size:12px;color:var(--txts);font-family:var(--mono);height:16px;}
+
+/* INPUTS */
+.form-row{margin-bottom:16px;}
+.form-label{font-size:11px;font-family:var(--mono);color:var(--txts);letter-spacing:.5px;display:block;margin-bottom:6px;}
+.form-label span{color:#FF6B6B;}
+.inp{width:100%;padding:11px 14px;background:rgba(30,111,255,0.06);border:1px solid var(--brd);border-radius:10px;color:var(--txt);font-family:var(--font);font-size:14px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,204,0.08);}
+.inp::placeholder{color:rgba(123,154,196,0.6);}
+textarea.inp{resize:vertical;min-height:100px;line-height:1.6;}
+select.inp option{background:var(--navy2);}
+
+/* SUBMIT */
+.btn-submit{width:100%;padding:14px;background:var(--grad);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;margin-top:8px;letter-spacing:.3px;}
+.btn-submit:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,204,0.2);}
+.btn-submit:active{transform:translateY(0);}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* SUCCESS */
+.success-card{display:none;text-align:center;padding:40px 20px;}
+.success-card.show{display:block;}
+.success-ic{font-size:56px;margin-bottom:16px;}
+.success-title{font-size:22px;font-weight:700;color:var(--txt);margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--txts);line-height:1.6;}
+.btn-another{display:inline-block;margin-top:20px;padding:10px 24px;background:transparent;color:var(--cyan);border:1px solid rgba(0,229,204,0.3);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;}
+.btn-another:hover{background:rgba(0,229,204,0.08);}
+
+/* FOOTER */
+.footer{margin-top:24px;font-size:11px;color:var(--txts);font-family:var(--mono);text-align:center;}
+.footer a{color:var(--cyan);text-decoration:none;}
+
+/* CHAR COUNT */
+.char-count{font-size:10px;font-family:var(--mono);color:var(--txts);text-align:right;margin-top:4px;}
+
+/* ERROR */
+.error-msg{font-size:11px;color:#FF6B6B;margin-top:4px;display:none;}
+.error-msg.show{display:block;}
+</style>
+</head>
+<body>
+<div class="header">
+ <div class="logo-row">
+  <div class="logo-ic">
+   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+   </svg>
+  </div>
+  <div class="logo-name">StockMind AI</div>
+ </div>
+ <h1>Partagez votre expérience</h1>
+ <p>Votre avis nous aide à améliorer nos produits et services. Il sera analysé par notre système IA.</p>
+</div>
+
+<div class="form-card">
+ <!-- FORM -->
+ <div id="form-section">
+  <div class="section-title">ÉVALUATION PRODUIT</div>
+
+  <!-- NOTE -->
+  <div class="stars-wrap">
+   <span class="stars-label">NOTE GLOBALE <span style="color:#FF6B6B;">*</span></span>
+   <div class="stars" id="stars">
+    <span class="star" data-v="1" onclick="setNote(1)">★</span>
+    <span class="star" data-v="2" onclick="setNote(2)">★</span>
+    <span class="star" data-v="3" onclick="setNote(3)">★</span>
+    <span class="star" data-v="4" onclick="setNote(4)">★</span>
+    <span class="star" data-v="5" onclick="setNote(5)">★</span>
+   </div>
+   <div class="stars-text" id="stars-text">Cliquez pour noter</div>
+   <div class="error-msg" id="err-note">Veuillez attribuer une note.</div>
+  </div>
+
+  <!-- PRODUIT -->
+  <div class="form-row">
+   <label class="form-label">PRODUIT CONCERNÉ <span>*</span></label>
+   <select class="inp" id="f-produit">
+    <option value="">— Sélectionner un produit —</option>
+   </select>
+   <div class="error-msg" id="err-prod">Veuillez sélectionner un produit.</div>
+  </div>
+
+  <!-- NOM -->
+  <div class="form-row">
+   <label class="form-label">VOTRE NOM <span>*</span></label>
+   <input class="inp" id="f-nom" type="text" placeholder="Ex: Marie Dupont" maxlength="60">
+   <div class="error-msg" id="err-nom">Veuillez entrer votre nom.</div>
+  </div>
+
+  <!-- AVIS -->
+  <div class="form-row">
+   <label class="form-label">VOTRE AVIS <span>*</span></label>
+   <textarea class="inp" id="f-avis" placeholder="Décrivez votre expérience avec ce produit... (minimum 20 caractères)" maxlength="500" oninput="updateCount()"></textarea>
+   <div class="char-count"><span id="char-count">0</span>/500 caractères</div>
+   <div class="error-msg" id="err-avis">L'avis doit contenir au moins 20 caractères.</div>
+  </div>
+
+  <button class="btn-submit" onclick="submitAvis()">✦ Soumettre mon avis</button>
+ </div>
+
+ <!-- SUCCESS -->
+ <div class="success-card" id="success-section">
+  <div class="success-ic">✓</div>
+  <div class="success-title">Merci pour votre avis !</div>
+  <div class="success-sub">Votre retour a bien été enregistré et sera analysé par notre système IA pour améliorer nos services.<br><br>Il apparaîtra dans notre tableau de bord analytique.</div>
+  <button class="btn-another" onclick="resetForm()">Déposer un autre avis</button>
+ </div>
+</div>
+
+<div class="footer">
+ StockMind AI · Smart Stock. Intelligent Decisions.<br>
+ <a href="analytics-client.html">Voir les analyses →</a>
+</div>
+
+<script>
+const AVIS_KEY='stockmind_avis';
+const STORE_KEY='stockmind_products';
+let selectedNote=0;
+
+const noteLabels={1:'😞 Très déçu',2:'😐 Décevant',3:'😊 Correct',4:'👍 Bien',5:'🌟 Excellent !'};
+
+function setNote(n){
+  selectedNote=n;
+  document.querySelectorAll('.star').forEach(s=>{
+    s.classList.toggle('on',parseInt(s.dataset.v)<=n);
+  });
+  document.getElementById('stars-text').textContent=noteLabels[n]||'';
+  document.getElementById('err-note').classList.remove('show');
+}
+
+function updateCount(){
+  const v=document.getElementById('f-avis').value.length;
+  document.getElementById('char-count').textContent=v;
+}
+
+function loadProds(){
+  const d=localStorage.getItem(STORE_KEY);
+  if(d) return JSON.parse(d);
+  return [{nom:'Produit demo'}];
+}
+
+function populateProducts(){
+  const sel=document.getElementById('f-produit');
+  const prods=loadProds();
+  sel.innerHTML='<option value="">— Sélectionner un produit —</option>'+prods.map(p=>`<option value="${p.nom}">${p.nom}</option>`).join('');
+}
+
+function validate(){
+  let ok=true;
+  if(!selectedNote){ document.getElementById('err-note').classList.add('show'); ok=false; }
+  if(!document.getElementById('f-produit').value){ document.getElementById('err-prod').classList.add('show'); ok=false; }
+  if(!document.getElementById('f-nom').value.trim()){ document.getElementById('err-nom').classList.add('show'); ok=false; }
+  if(document.getElementById('f-avis').value.trim().length<20){ document.getElementById('err-avis').classList.add('show'); ok=false; }
+  return ok;
+}
+
+function analyseText(t){
+  const l=t.toLowerCase();let sc=0;
+  ['excellent','très bon','super','parfait','satisfait','recommande','top','agréable','bon','pratique','qualité'].forEach(k=>{if(l.includes(k))sc+=.2;});
+  ['déçu','mauvais','horrible','cher','décevant','lent','problème','nul'].forEach(k=>{if(l.includes(k))sc-=.25;});
+  if(l.includes('pas')&&(l.includes('bien')||l.includes('bon')))sc-=.15;
+  sc=Math.max(-1,Math.min(1,sc));
+  return sc>.1?'positif':sc<-.1?'négatif':'neutre';
+}
+
+function submitAvis(){
+  document.querySelectorAll('.error-msg').forEach(e=>e.classList.remove('show'));
+  if(!validate()) return;
+
+  const texte=document.getElementById('f-avis').value.trim();
+  const avis=JSON.parse(localStorage.getItem(AVIS_KEY)||'[]');
+  const newId=Math.max(0,...avis.map(a=>a.id))+1;
+  const today=new Date().toISOString().slice(0,10);
+
+  avis.push({
+    id:newId,
+    produit:document.getElementById('f-produit').value,
+    auteur:document.getElementById('f-nom').value.trim(),
+    note:selectedNote,
+    texte:texte,
+    sentiment:analyseText(texte),
+    date:today
+  });
+  localStorage.setItem(AVIS_KEY,JSON.stringify(avis));
+
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('success-section').classList.add('show');
+}
+
+function resetForm(){
+  selectedNote=0;
+  document.querySelectorAll('.star').forEach(s=>s.classList.remove('on'));
+  document.getElementById('stars-text').textContent='Cliquez pour noter';
+  document.getElementById('f-produit').value='';
+  document.getElementById('f-nom').value='';
+  document.getElementById('f-avis').value='';
+  document.getElementById('char-count').textContent='0';
+  document.getElementById('form-section').style.display='block';
+  document.getElementById('success-section').classList.remove('show');
+}
+
+populateProducts();
+</script>
+</body>
+</html>
